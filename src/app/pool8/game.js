@@ -5,31 +5,19 @@ import Ball from "./ball";
 let instance;
 
 export class Game {
-  rendererOptions;
+  options;
   board = null;
   balls = [];
   renderItems = [];
   clock = null;
 
-  static getInstance(rendererOptions) {
-    if (!instance) instance = new Game(rendererOptions);
+  static getInstance(options) {
+    if (!instance) instance = new Game(options);
     return instance;
   }
 
-  constructor(rendererOptions) {
-    this.clock = new THREE.Clock();
-    rendererOptions.clock = this.clock;
-    this.rendererOptions = rendererOptions;
-    this.board = new Board(rendererOptions);
-    // this.balls = new Array(14)
-    //   .fill(null)
-    //   .map((_, n) => new Ball(rendererOptions, { ballNumber: n + 1 }));
-    this.balls = [new Ball(rendererOptions, { ballNumber: 13 })];
-    this.renderItems = [...this.balls, this.board];
-  }
-
   render() {
-    const { renderer, scene, camera } = this.rendererOptions;
+    const { renderer, scene, camera } = this.options;
     const callback = () => {
       renderer.render(scene, camera);
       window.requestAnimationFrame(() => this.render());
@@ -40,8 +28,18 @@ export class Game {
     });
   }
 
-  init() {
-    const { light, scene } = this.rendererOptions;
+  init(options) {
+    this.clock = new THREE.Clock();
+    options.clock = this.clock;
+    this.options = options;
+    this.board = new Board(options);
+    // this.balls = new Array(3)
+    //   .fill(null)
+    //   .map((_, n) => new Ball(options, { ballNumber: n + 1 }));
+    this.balls = [new Ball(options, { ballNumber: 13 })];
+    this.renderItems = [...this.balls, this.board];
+
+    const { light, scene } = this.options;
     const helper = new THREE.CameraHelper(light.shadow.camera);
     scene.add(helper);
     this.render();
@@ -49,5 +47,5 @@ export class Game {
 }
 
 export default {
-  getInstance: (rendererOptions) => Game.getInstance(rendererOptions),
+  getInstance: (options) => Game.getInstance().init(options),
 };

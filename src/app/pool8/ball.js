@@ -1,6 +1,7 @@
 import * as THREE from "three";
+import { Game } from "./game";
 import SceneItem from "./scene-item";
-import { SceneUtils } from "three/examples/jsm/utils/SceneUtils";
+import { createSphereText } from "./utils/font";
 
 const getColor = (number) => {
   switch (number) {
@@ -23,6 +24,8 @@ const getColor = (number) => {
   }
 };
 
+const loader = new THREE.FontLoader();
+
 const getBallColor = (number) => {
   const color = getColor(number > 8 ? number - 7 : number);
   return { color, isStripped: number > 8 };
@@ -35,12 +38,14 @@ export default class Ball extends SceneItem {
     const {
       args: { ballNumber },
     } = this;
+    const { DroidSerifBoldFont } = Game.getInstance().options.resources;
 
     const group = new THREE.Group();
     const { color, isStripped } = getBallColor(ballNumber);
     const radius = 3;
-    const radialSegments = 32;
+    const radialSegments = 80;
 
+    // Base sphere
     const sphereBaseMaterial = new THREE.MeshPhongMaterial({
       color,
       specular: 0xffffff,
@@ -54,6 +59,7 @@ export default class Ball extends SceneItem {
     sphereBase.castShadow = true;
     group.add(sphereBase);
 
+    // Stripped parts
     if (isStripped) {
       const sphereStrippedMaterial = new THREE.MeshPhongMaterial({
         color: 0xffffff,
@@ -67,29 +73,74 @@ export default class Ball extends SceneItem {
         100,
         Math.PI * 2,
         100,
-        Math.PI / 2
+        Math.PI / 2 - 0.1
       );
       const sphereStrippedTop = new THREE.Mesh(
         sphereStrippedGeometry,
         sphereStrippedMaterial
       );
       const sphereStrippedBottom = sphereStrippedTop.clone();
-      sphereStrippedTop.rotateX(Math.PI - 0.1);
+      sphereStrippedTop.rotateX(Math.PI);
       sphereStrippedBottom.castShadow = true;
       sphereStrippedTop.castShadow = true;
       group.add(sphereStrippedTop);
       group.add(sphereStrippedBottom);
     }
 
+    // Ball number
+
+    const sphereBallNumberMaterial = new THREE.MeshPhongMaterial({
+      color: 0xffffff,
+      specular: 0xffffff,
+    });
+
+    const sphereBallNumberGeometry = new THREE.SphereBufferGeometry(
+      radius,
+      radialSegments * Math.PI,
+      radialSegments * Math.PI,
+      100,
+      Math.PI * 2,
+      100,
+      Math.PI / 2 - 0.55
+    );
+    const sphereBallNumberFront = new THREE.Mesh(
+      sphereBallNumberGeometry,
+      sphereBallNumberMaterial
+    );
+    sphereBallNumberFront.rotateX(Math.PI / 2);
+    const sphereBallNumberBack = sphereBallNumberFront.clone();
+    sphereBallNumberBack.rotateZ(radius);
+
+    const ballNumberTextGeometry = new THREE.TextGeometry(ballNumber, {});
+    const ballNumberTextMaterial = new THREE.MeshPhongMaterial({
+      color: 0x000000,
+      specular: 0xffffff,
+    });
+    // const ballNumberText = new THREE.Mesh(
+    //   ballNumberTextGeometry,
+    //   ballNumberTextMaterial
+    // );
+    // ballNumberText.rotateZ(radius);
+    // group.add(ballNumberText);
+    // const ballText = createText2D(ballNumber, 0x000000, "Verdana", 2);
+    const ballText = createSphereText(String(ballNumber), {
+      font: DroidSerifBoldFont,
+    });
+    group.add(ballText);
+
+    group.add(sphereBallNumberFront);
+    group.add(sphereBallNumberFront);
+    group.add(sphereBallNumberBack);
+
     group.translateZ(radius);
+    group.rotateY(radius / 2);
     return group;
   }
 
   render() {
-    if (this.renderObj.position.y >= 50 - this.args.ballNumber) return;
-    const movementRation = 0.2;
-    const movement = this.args.ballNumber * (movementRation / 10.9);
-    this.renderObj.position.y = this.renderObj.position.y + movement;
-    this.renderObj.rotateX(movement * -movementRation);
+    // if (this.renderObj.position.y >= 50 - this.args.ballNumber) return;
+    // const movementRation = 0.2;
+    // const movement = this.args.ballNumber * (movementRation / 10.9);
+    // this.renderObj.position.y = this.renderObj.position.y + movement;
   }
 }
